@@ -1,0 +1,57 @@
+IDC监控大屏
+sdk-site-district
+sdk-user-district
+sdk-site-requesttype
+sdk-site-total
+sdk-site-line
+1. IDC各站点成功率
+index=znyw.metric.bonreesdk* topic='sdk-site-total' |stats first(sdkRequestSuccessrate,sort='@timestamp',order=desc) as '成功率' by targetSite3. IDC各站点服务端响应耗时
+2. IDC服务端响应耗时
+index=znyw.metric.bonreesdk* topic='sdk-site-total' |stats first(sdkResponTime,sort='@timestamp',order=desc) as '服务端响应耗时ms' by targetSite|sort by '服务端响应耗时ms' desc
+3. IDC前端连接耗时
+index=znyw.metric.bonreesdk* topic='sdk-site-total' |stats first(sdkRequestTime,sort='@timestamp',order=desc) as '前端连接耗时ms' by targetSite|sort by '前端连接耗时ms' desc
+4. IDC各站点实时请求量
+index=znyw.metric.bonreesdk* topic='sdk-site-total' |stats first(sdkRequestCount,sort='@timestamp',order=desc) as '访问量' by targetSite|sort by '访问量' desc
+5. 专线带宽利用率
+index=znyw.metric.idcnetwork* lineType='专线' targetNetService='主线'|stats max(ifInUse) as '占用率In',max(ifOutUse) as '占用率(Out)',max(ifIn) as '峰值(In)',max(ifOut) as '峰值(Out)' by targetSite
+
+6. 实时请求TPS
+index=znyw.metric.bonreesdk* topic='sdk-site-total' |stats first(sdkRequestCount,sort='@timestamp',order=desc) as '访问量' by targetSite|stats sum('访问量')
+7. 当日累计请求数
+index=znyw.metric.bonreesdk* topic='sdk-site-total' |stats sum(sdkRequestCount)
+8.日活设备数
+索引暂无
+
+实时展示博睿SDK各站点指标
+index=znyw.metric.bonreesdk* topic='sdk-site-total' |stats first(sdkRequestSuccessrate,sort='@timestamp',order=desc) 
+ as '成功率',first(sdkRequestCount,sort='@timestamp',order=desc) as '访问量',first(sdkRequestTime,sort='@timestamp',order=desc) as '前端连接耗时ms',first(sdkResponTime,sort='@timestamp',order=desc) as '服务端响应耗时ms' by targetSite as '站点'|sort by '访问量' desc
+实时展示博睿SDK各区域指标
+index=znyw.metric.bonreesdk* topic='sdk-user-district' AND NOT userDistrictName in ('其他其他')|stats first(sdkRequestSuccessrate,sort='@timestamp',order=desc) 
+ as '成功率',first(sdkRequestCount,sort='@timestamp',order=desc) as '访问量',first(sdkRequestTime,sort='@timestamp',order=desc) as '前端连接耗时ms' by userDistrictName|sort by '访问量' desc
+实时展示专线线路情况
+index=znyw.metric.idcnetwork* lineType='专线'|stats first(ifInUse,sort='@timestamp',order=desc) as '流入占比',first(ifOutUse,sort='@timestamp',order=desc) as '流出占比',first(ifIn,sort='@timestamp',order=desc) as '流入带宽',first(ifOut,sort='@timestamp',order=desc) as '流出带宽' by targetSite,targetNetService 
+实时展示互联网线路情况
+index=znyw.metric.idcnetwork* lineType='互联网'|stats first(ifInUse,sort='@timestamp',order=desc) as '流入占比',first(ifOutUse,sort='@timestamp',order=desc) as '流出占比',first(ifIn,sort='@timestamp',order=desc) as '流入带宽',first(ifOut,sort='@timestamp',order=desc) as '流出带宽' by targetSite,targetNetService
+
+APP监控大屏
+funcno
+mainBusiness
+secondBusiness
+当日用户访问量
+index=znyw.metric.bonreesdk* topic='sdk-site-total'|stats sum(sdkRequestCount) by date_histogram(@timestamp,1m)
+当日用户访问成功率
+index=znyw.metric.bonreesdk* topic='sdk-site-total'|stats avg(sdkRequestSuccessrate) by date_histogram(@timestamp,1m)
+当日用户请求耗时
+index=znyw.metric.bonreesdk* topic='sdk-site-total'|stats avg(sdkRequestTime) by date_histogram(@timestamp,1m)
+
+funcNO三要素查询
+index=znyw.metric.hlwzt* topic='funcno'  AND  funcNo IN ('IF115018','IF096001','IF150003')|stats first(accessDuration,sort='@timestamp',order=desc) as '耗时',first(accessSuccessRate,sort='@timestamp',order=desc) as '成功率',first(accessRequestCount,sort='@timestamp',order=desc) as '访问量' by funcNo
+
+
+地图监控
+
+获取站点维度信息
+index=znyw.metric.bonreesdk* topic='sdk-site-total' targetSite in ('移动IDC','南汇IDC','沈阳IDC','真如IDC','西安IDC','东莞IDC','高桥')| stats first(sdkRequestCount, sort='@timestamp', order=desc) as '请求量', first(sdkRequestTime, sort='@timestamp', order=desc) as '请求时延', first(sdkResponTime, sort='@timestamp', order=desc) as '响应时延', first(sdkRequestSuccessrate, sort='@timestamp', order=desc) as '成功率' by targetSite 
+
+获取站点+用户维度信息
+index=znyw.metric.bonreesdk* topic='sdk-site-district' targetSite in ('移动IDC','南汇IDC','沈阳IDC','真如IDC','西安IDC','东莞IDC','高桥')| stats first(sdkRequestCount, sort='@timestamp', order=desc) as '请求量', first(sdkRequestTime, sort='@timestamp', order=desc) as '请求时延',  first(sdkResponTime, sort='@timestamp', order=desc) as '响应时延',  first(sdkRequestSuccessrate, sort='@timestamp', order=desc) as '成功率' by targetSite, userProvince
